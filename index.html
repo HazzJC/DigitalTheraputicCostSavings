@@ -29,11 +29,6 @@
 
     * { box-sizing: border-box; }
 
-    html, body{
-      margin: 0;
-      padding: 0;
-    }
-
     body{
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: transparent;
@@ -141,23 +136,6 @@
       border-radius: 999px;
     }
 
-    input[type="number"]{
-      font-variant-numeric: tabular-nums;
-      font-size: 24px;
-      font-weight: 500;
-    }
-
-    input[type="number"]:focus-visible{
-      outline: 3px solid var(--focus);
-      outline-offset: 2px;
-    }
-
-    input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button{
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
     .panel{
       background: linear-gradient(160deg, var(--panel), var(--teal-2));
       border-radius: 22px;
@@ -187,27 +165,12 @@
       min-height: 100%;
     }
 
-    .big-number{
-      font-size: clamp(28px, 4.2vw, 44px);
-      line-height: 1.02;
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-    }
-
     .kicker{
       font-size: 12px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: rgba(233, 253, 255, 0.82);
       font-weight: 800;
-    }
-
-    .label{
-      font-size: 17px;
-      line-height: 1.35;
-      font-weight: 700;
-      color: rgba(15, 23, 42, 0.92);
     }
 
     .question-label{
@@ -298,61 +261,17 @@
 
     .input-card{
       padding: 22px 22px;
-    }
-
-    .input-card.large-grow{
-      flex: 1;
-    }
-
-    .number-wrap{
-      position: relative;
-      width: 100%;
-      max-width: 100%;
-    }
-
-    .days-suffix{
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 14px;
-      font-weight: 600;
-      color: rgba(71,85,105,0.85);
-      pointer-events: none;
+      flex: 1; /* Distribute space equally among remaining boxes */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     @media (max-width: 1023px){
-      .panel{
-        height: auto;
-      }
-
-      .left-column{
-        height: auto;
-      }
-
-      .left-stack{
-        flex: initial;
-      }
-
-      .question-label{
-        font-size: clamp(20px, 5vw, 24px);
-      }
-
-      .label{
-        font-size: 18px;
-      }
-
-      .value-pill{
-        font-size: 17px;
-      }
-
-      .minmax{
-        font-size: 16px;
-      }
-
-      .metric-label{
-        font-size: 17px;
-      }
+      .panel{ height: auto; }
+      .left-column{ height: auto; }
+      .left-stack{ flex: initial; }
+      .input-card { flex: initial; }
     }
   </style>
 </head>
@@ -456,31 +375,6 @@
                   <span>£15,000</span><span>£50,000</span>
                 </div>
               </div>
-
-              <div class="card input-card shadow-soft large-grow flex flex-col justify-start">
-                <label for="inputD" class="question-label block mb-4">
-                  Average length of inpatient stay
-                </label>
-
-                <div class="flex items-center gap-3 flex-wrap">
-                  <div class="number-wrap w-full sm:max-w-xs">
-                    <input type="number"
-                           id="inputD"
-                           min="1"
-                           max="365"
-                           step="1"
-                           value="82"
-                           class="w-full px-4 py-3 rounded-xl border-2"
-                           style="border-color: rgba(15,23,42,0.16);"
-                           aria-describedby="helpD" />
-                    <span class="days-suffix">Days</span>
-                  </div>
-
-                  <p id="helpD" class="help">
-                    Used as a reference input for local pathway assumptions.
-                  </p>
-                </div>
-              </div>
             </div>
           </section>
 
@@ -551,8 +445,7 @@
     const defaults = {
       A: 1000,
       B: 25,
-      C: 25000,
-      D: 82
+      C: 25000
     };
 
     const config = {
@@ -564,7 +457,6 @@
     const inputA = document.getElementById('inputA');
     const inputB = document.getElementById('inputB');
     const inputC = document.getElementById('inputC');
-    const inputD = document.getElementById('inputD');
 
     const valA = document.getElementById('valA');
     const valB = document.getElementById('valB');
@@ -587,10 +479,6 @@
       return Math.round(num).toLocaleString('en-GB');
     }
 
-    function clamp(n, min, max) {
-      return Math.min(max, Math.max(min, n));
-    }
-
     function paintRange(el) {
       const min = Number(el.min);
       const max = Number(el.max);
@@ -604,11 +492,6 @@
       const B_pct = Number(inputB.value) || 0;
       const B = B_pct / 100;
       const C = Number(inputC.value) || 0;
-
-      let D = Number(inputD.value);
-      if (!Number.isFinite(D)) D = defaults.D;
-      D = clamp(D, 1, 365);
-      inputD.value = D;
 
       valA.textContent = A.toLocaleString('en-GB');
       valB.textContent = B_pct + '%';
@@ -635,7 +518,7 @@
       paintRange(inputC);
     }
 
-    [inputA, inputB, inputC, inputD].forEach(el => {
+    [inputA, inputB, inputC].forEach(el => {
       el.addEventListener('input', calculate);
       el.addEventListener('change', calculate);
     });
@@ -644,7 +527,6 @@
       inputA.value = defaults.A;
       inputB.value = defaults.B;
       inputC.value = defaults.C;
-      inputD.value = defaults.D;
       calculate();
     });
 
