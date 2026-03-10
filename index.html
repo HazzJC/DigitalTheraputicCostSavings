@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CareLoop Potential Savings Calculator</title>
+  <title>CareLoop Savings Calculator</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg: #e9fdff;                 /* Background Lighter Blue */
+      --bg: #e9fdff;
       --card: #ffffff;
       --ink: #0f172a;
       --muted: #475569;
       --border: rgba(15, 23, 42, 0.10);
 
-      --purple: #4b3054;             /* Font Purple */
-      --teal: #08849f;               /* Button Teal */
-      --teal-2: #14868e;             /* Logo Teal */
-      --panel: #158f9a;              /* Dark Teal Background */
-      --highlight: #f59e0b;          /* IMPROVED: Warmer Gold Contrast */
+      --purple: #4b3054;
+      --teal: #08849f;
+      --teal-2: #14868e;
+      --panel: #158f9a;
+      --highlight: #eda707;
 
       --track: rgba(15, 23, 42, 0.12);
       --focus: rgba(237, 167, 7, 0.35);
@@ -29,18 +29,22 @@
 
     * { box-sizing: border-box; }
 
+    html, body{
+      margin: 0;
+      padding: 0;
+    }
+
     body{
       font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: transparent;
       color: var(--ink);
       line-height: 1.4;
-      margin: 0;
-      padding: 0;
     }
 
     .frame-pad{
       padding: 10px;
     }
+
     @media (min-width: 640px){
       .frame-pad{ padding: 16px; }
     }
@@ -58,18 +62,19 @@
     }
 
     .title{
-      font-size: clamp(18px, 2.3vw, 28px);
+      font-size: clamp(20px, 2.3vw, 28px);
       line-height: 1.15;
       letter-spacing: -0.02em;
     }
+
     .subtitle{
-      font-size: clamp(13px, 1.5vw, 15px);
+      font-size: clamp(14px, 1.5vw, 15px);
       color: var(--muted);
     }
 
     .section-title{
       font-size: 14px;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
       color: rgba(15, 23, 42, 0.75);
       font-weight: 700;
       text-transform: uppercase;
@@ -86,11 +91,17 @@
       background: rgba(8, 132, 159, 0.10);
       border: 1px solid rgba(8, 132, 159, 0.22);
       color: var(--teal);
+      font-size: 18px;
+      line-height: 1;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
     }
 
     .help{
-      color: rgba(71, 85, 105, 0.9);
-      font-size: 12px;
+      color: rgba(71, 85, 105, 0.95);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     input[type="range"]{
@@ -106,8 +117,8 @@
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       background: var(--teal);
       border: 3px solid white;
@@ -116,8 +127,8 @@
     }
 
     input[type="range"]::-moz-range-thumb{
-      width: 18px;
-      height: 18px;
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       background: var(--teal);
       border: 3px solid white;
@@ -132,7 +143,10 @@
 
     input[type="number"]{
       font-variant-numeric: tabular-nums;
+      font-size: 24px;
+      font-weight: 500;
     }
+
     input[type="number"]:focus-visible{
       outline: 3px solid var(--focus);
       outline-offset: 2px;
@@ -149,6 +163,8 @@
       border-radius: 22px;
       position: relative;
       overflow: hidden;
+      height: 100%;
+      display: flex;
     }
 
     .panel::before{
@@ -157,21 +173,30 @@
       inset: -120px -120px auto auto;
       width: 260px;
       height: 260px;
-      background: radial-gradient(circle, rgba(245, 158, 11,0.15), rgba(245, 158, 11,0.00) 62%);
+      background: radial-gradient(circle, rgba(237,167,7,0.22), rgba(237,167,7,0.00) 62%);
       transform: rotate(18deg);
       pointer-events: none;
     }
 
+    .panel-inner{
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
     .big-number{
-      font-size: clamp(26px, 4.2vw, 44px);
-      line-height: 1.05;
+      font-size: clamp(28px, 4.2vw, 44px);
+      line-height: 1.02;
       font-weight: 900;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.02em;
     }
 
     .kicker{
-      font-size: 11px;
+      font-size: 12px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: rgba(233, 253, 255, 0.82);
@@ -179,19 +204,155 @@
     }
 
     .label{
-      font-size: 14px;
+      font-size: 17px;
+      line-height: 1.35;
       font-weight: 700;
-      color: rgba(15, 23, 42, 0.90);
+      color: rgba(15, 23, 42, 0.92);
+    }
+
+    .question-label{
+      font-size: clamp(22px, 2.3vw, 28px);
+      line-height: 1.28;
+      font-weight: 700;
+      color: rgba(15, 23, 42, 0.92);
+      letter-spacing: -0.02em;
     }
 
     .minmax{
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      margin-top: 6px;
-      color: rgba(71, 85, 105, 0.85);
-      font-size: 11px;
+      margin-top: 10px;
+      color: rgba(71, 85, 105, 0.95);
+      font-size: 18px;
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
+    }
+
+    .metric-title{
+      font-size: 18px;
+      font-weight: 800;
+      color: rgba(233,253,255,0.94);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-label{
+      font-size: 18px;
+      font-weight: 600;
+      color: rgba(233,253,255,0.92);
+      line-height: 1.35;
+    }
+
+    .metric-value{
+      font-size: clamp(34px, 4.8vw, 54px);
+      line-height: 1;
+      font-weight: 900;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      margin-top: 8px;
+    }
+
+    .metric-value.soft{
+      color: rgba(233,253,255,0.82);
+    }
+
+    .metric-section{
+      border-top: 1px solid rgba(255,255,255,0.18);
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .highlight-title{
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--highlight);
+      margin-bottom: 8px;
+    }
+
+    .input-inline-note{
+      font-size: 13px;
+      color: rgba(233,253,255,0.90);
+      line-height: 1.55;
+    }
+
+    .equal-height-grid{
+      align-items: stretch;
+    }
+
+    .left-column{
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .left-stack{
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .input-card{
+      padding: 22px 22px;
+    }
+
+    .input-card.large-grow{
+      flex: 1;
+    }
+
+    .number-wrap{
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .days-suffix{
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(71,85,105,0.85);
+      pointer-events: none;
+    }
+
+    @media (max-width: 1023px){
+      .panel{
+        height: auto;
+      }
+
+      .left-column{
+        height: auto;
+      }
+
+      .left-stack{
+        flex: initial;
+      }
+
+      .question-label{
+        font-size: clamp(20px, 5vw, 24px);
+      }
+
+      .label{
+        font-size: 18px;
+      }
+
+      .value-pill{
+        font-size: 17px;
+      }
+
+      .minmax{
+        font-size: 16px;
+      }
+
+      .metric-label{
+        font-size: 17px;
+      }
     }
   </style>
 </head>
@@ -225,167 +386,157 @@
           </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch">
-          <section class="lg:col-span-7 space-y-4">
-            <div class="flex items-center justify-between">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 equal-height-grid">
+          <section class="lg:col-span-7 left-column">
+            <div class="flex items-center justify-between mb-4">
               <h2 class="section-title">Programme variables</h2>
               <button id="resetBtn"
                       type="button"
-                      class="text-xs font-bold px-3 py-2 rounded-xl border"
+                      class="text-sm font-bold px-3 py-2 rounded-xl border"
                       style="border-color: rgba(8,132,159,0.22); background: rgba(8,132,159,0.08); color: var(--teal);">
                 Reset
               </button>
             </div>
 
-            <div class="card p-4 sm:p-5 shadow-soft">
-              <div class="flex items-end justify-between gap-3 flex-wrap mb-3">
-                <label for="inputA" class="label">
-                  Service users with diagnosis
-                </label>
-                <output id="valA" class="value-pill text-sm font-extrabold px-2.5 py-1 rounded-xl">
-                  1,000
-                </output>
-              </div>
-
-              <input type="range" id="inputA" min="100" max="5000" step="10" value="1000"
-                     aria-describedby="helpA minmaxA" />
-
-              <div id="minmaxA" class="minmax">
-                <span>100</span><span>5,000</span>
-              </div>
-
-              <p id="helpA" class="help mt-2">
-                Total service users with Psychosis or Schizophrenia (ICD code F20-F29) and are 16+.
-              </p>
-            </div>
-
-            <div class="card p-4 sm:p-5 shadow-soft">
-              <div class="flex items-end justify-between gap-3 flex-wrap mb-3">
-                <label for="inputB" class="label">
-                  Average annual relapse rate
-                </label>
-                <output id="valB" class="value-pill text-sm font-extrabold px-2.5 py-1 rounded-xl">
-                  25%
-                </output>
-              </div>
-
-              <input type="range" id="inputB" min="10" max="75" step="1" value="25"
-                     aria-describedby="minmaxB" />
-
-              <div id="minmaxB" class="minmax">
-                <span>10%</span><span>75%</span>
-              </div>
-            </div>
-
-            <div class="card p-4 sm:p-5 shadow-soft">
-              <div class="flex items-end justify-between gap-3 flex-wrap mb-3">
-                <label for="inputC" class="label">
-                  Average cost of a relapse
-                </label>
-                <output id="valC" class="value-pill text-sm font-extrabold px-2.5 py-1 rounded-xl">
-                  £25,000
-                </output>
-              </div>
-
-              <input type="range" id="inputC" min="10000" max="50000" step="500" value="25000"
-                     aria-describedby="minmaxC" />
-
-              <div id="minmaxC" class="minmax">
-                <span>£10,000</span><span>£50,000</span>
-              </div>
-            </div>
-
-            <div class="card p-4 sm:p-5 shadow-soft">
-              <label for="inputD" class="label block mb-2">
-                Average length of inpatient stay
-              </label>
-
-              <div class="flex items-center gap-3 flex-wrap">
-                <div class="relative w-full sm:max-w-xs">
-                  <input type="number"
-                         id="inputD"
-                         min="1"
-                         max="365"
-                         step="1"
-                         value="82"
-                         class="w-full px-3 py-2.5 rounded-xl border-2"
-                         style="border-color: rgba(15,23,42,0.16);"
-                         aria-describedby="helpD" />
-                  <span class="absolute right-3 top-2.5 text-xs font-semibold"
-                        style="color: rgba(71,85,105,0.85);">
-                    Days
-                  </span>
+            <div class="left-stack">
+              <div class="card input-card shadow-soft">
+                <div class="flex items-end justify-between gap-3 flex-wrap mb-4">
+                  <label for="inputA" class="question-label">
+                    Service users with diagnosis
+                  </label>
+                  <output id="valA" class="value-pill font-extrabold px-3 py-2 rounded-xl">
+                    1,000
+                  </output>
                 </div>
 
-                <p id="helpD" class="help">
-                  Limited to 1 to 365 for sanity checking.
+                <input type="range" id="inputA" min="100" max="5000" step="10" value="1000"
+                       aria-describedby="helpA minmaxA" />
+
+                <div id="minmaxA" class="minmax">
+                  <span>100</span><span>5,000</span>
+                </div>
+
+                <p id="helpA" class="help mt-3">
+                  Total service users with Psychosis or Schizophrenia.
                 </p>
+              </div>
+
+              <div class="card input-card shadow-soft">
+                <div class="flex items-end justify-between gap-3 flex-wrap mb-4">
+                  <label for="inputB" class="question-label">
+                    Average annual relapse rate
+                  </label>
+                  <output id="valB" class="value-pill font-extrabold px-3 py-2 rounded-xl">
+                    25%
+                  </output>
+                </div>
+
+                <input type="range" id="inputB" min="10" max="75" step="1" value="25"
+                       aria-describedby="minmaxB" />
+
+                <div id="minmaxB" class="minmax">
+                  <span>10%</span><span>75%</span>
+                </div>
+              </div>
+
+              <div class="card input-card shadow-soft">
+                <div class="flex items-end justify-between gap-3 flex-wrap mb-4">
+                  <label for="inputC" class="question-label">
+                    Average cost of a relapse
+                  </label>
+                  <output id="valC" class="value-pill font-extrabold px-3 py-2 rounded-xl">
+                    £25,000
+                  </output>
+                </div>
+
+                <input type="range" id="inputC" min="10000" max="50000" step="500" value="25000"
+                       aria-describedby="minmaxC" />
+
+                <div id="minmaxC" class="minmax">
+                  <span>£10,000</span><span>£50,000</span>
+                </div>
+              </div>
+
+              <div class="card input-card shadow-soft large-grow flex flex-col justify-start">
+                <label for="inputD" class="question-label block mb-4">
+                  Average length of inpatient stay
+                </label>
+
+                <div class="flex items-center gap-3 flex-wrap">
+                  <div class="number-wrap w-full sm:max-w-xs">
+                    <input type="number"
+                           id="inputD"
+                           min="1"
+                           max="365"
+                           step="1"
+                           value="82"
+                           class="w-full px-4 py-3 rounded-xl border-2"
+                           style="border-color: rgba(15,23,42,0.16);"
+                           aria-describedby="helpD" />
+                    <span class="days-suffix">Days</span>
+                  </div>
+
+                  <p id="helpD" class="help">
+                    Used as a reference input for local pathway assumptions.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
-          <aside class="lg:col-span-5 panel p-5 sm:p-6 lg:p-7 shadow-soft text-white h-full flex flex-col">
-            <div class="relative z-10 flex flex-col h-full flex-grow">
+          <aside class="lg:col-span-5 panel p-5 sm:p-6 lg:p-7 shadow-soft text-white">
+            <div class="panel-inner">
               <p class="kicker">Estimated annual impact</p>
 
-              <div class="mt-5 space-y-5 flex-grow flex flex-col">
-                
-                <div class="rounded-2xl p-4"
-                     style="background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16);">
-                  <div class="mb-3">
-                    <p class="text-sm font-semibold" style="color: rgba(233,253,255,0.9);">Cost of Managed Platform</p>
-                    <p id="resPlatform" class="text-2xl font-bold mt-1">£500,000</p>
+              <div class="mt-5 space-y-5">
+                <div>
+                  <p class="metric-label">Cost of managed platform</p>
+                  <p id="managedCost" class="metric-value">£500,000</p>
+                </div>
+
+                <div>
+                  <p class="metric-label">Implementation and set-up</p>
+                  <p id="setupCost" class="metric-value">£25,000</p>
+                </div>
+
+                <div class="metric-section">
+                  <p class="highlight-title">Total platform fee per annum</p>
+                  <p id="totalFee" class="metric-value soft">£525,000</p>
+                </div>
+
+                <div class="metric-section">
+                  <p class="metric-title">Savings</p>
+
+                  <div class="mt-4">
+                    <p class="metric-label">Relapses prevented</p>
+                    <p id="resPrevented" class="metric-value">63</p>
                   </div>
-                  <div class="mb-4">
-                    <p class="text-sm font-semibold" style="color: rgba(233,253,255,0.9);">Implementation and set-up</p>
-                    <p id="resSetup" class="text-2xl font-bold mt-1">£25,000</p>
-                  </div>
-                  <div class="pt-4" style="border-top: 1px solid rgba(255,255,255,0.18);">
-                    <p class="text-xs tracking-widest uppercase font-extrabold" style="color: var(--highlight);">
-                      Total Platform Fee Per Annum
-                    </p>
-                    <p id="resTotalFee" class="big-number mt-2" style="color: var(--highlight);">£525,000</p>
+
+                  <div class="mt-5">
+                    <p class="metric-label">Cost saving</p>
+                    <p id="resSavings" class="metric-value">£1,562,500</p>
                   </div>
                 </div>
 
-                <div class="rounded-2xl p-4"
-                     style="background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16);">
-                  <p class="text-xs tracking-widest uppercase font-extrabold mb-3" style="color: #a5f3fc;">
-                    Savings
-                  </p>
-                  <div class="mb-4">
-                    <p class="text-sm font-semibold" style="color: rgba(233,253,255,0.9);">Relapses Prevented</p>
-                    <p id="resPrevented" class="text-3xl font-bold mt-1">63</p>
-                  </div>
-                  <div>
-                    <p class="text-sm font-semibold" style="color: rgba(233,253,255,0.9);">Cost Saving</p>
-                    <p id="resSavings" class="big-number mt-2">£1,562,500</p>
-                  </div>
+                <div class="metric-section">
+                  <p class="highlight-title">Net return</p>
+                  <p id="netReturn" class="metric-value soft">£1,037,500</p>
                 </div>
-
-                <div class="rounded-2xl p-4 mt-auto mb-6"
-                     style="background: rgba(237,167,7,0.10); border: 1px solid rgba(237,167,7,0.3);">
-                  <p class="text-xs tracking-widest uppercase font-extrabold" style="color: var(--highlight);">
-                    Net Return
-                  </p>
-                  <p id="resNetReturn" class="big-number mt-2" style="color: var(--highlight);">£1,037,500</p>
-                </div>
-
               </div>
 
               <div class="mt-auto pt-5"
                    style="border-top: 1px solid rgba(255,255,255,0.18);">
                 <div class="flex items-start gap-2">
                   <div class="shrink-0 rounded-lg p-1.5"
-                       style="background: rgba(237,167,7,0.15); border: 1px solid rgba(237,167,7,0.3);">
-                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" style="color: var(--highlight);">
+                       style="background: rgba(237,167,7,0.20); border: 1px solid rgba(237,167,7,0.35);">
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" style="color: rgba(255,255,255,0.95);">
                       <path fill-rule="evenodd"
                         d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                         clip-rule="evenodd"></path>
                     </svg>
                   </div>
-                  <p class="text-xs leading-snug" style="color: rgba(233,253,255,0.9);">
-                    Outputs apply a <span class="font-extrabold" style="color: #ffffff;">25%</span> reduction to expected relapses. Net Return equals Cost Saving minus Total Platform Fee.
+                  <p class="input-inline-note">
+                    Net return is calculated as cost saving minus total platform fee, using a 25% reduction in expected relapses.
                   </p>
                 </div>
               </div>
@@ -404,10 +555,11 @@
       D: 82
     };
 
-    // Configuration assumptions 
-    const SETUP_FEE = 25000;
-    const PLATFORM_FEE_PER_USER = 500;
-    const RELAPSE_REDUCTION_FACTOR = 0.25;
+    const config = {
+      reductionRate: 0.25,
+      managedPlatformCostPerUser: 500,
+      implementationCost: 25000
+    };
 
     const inputA = document.getElementById('inputA');
     const inputB = document.getElementById('inputB');
@@ -418,13 +570,12 @@
     const valB = document.getElementById('valB');
     const valC = document.getElementById('valC');
 
-    // Output elements
-    const resPlatform = document.getElementById('resPlatform');
-    const resSetup = document.getElementById('resSetup');
-    const resTotalFee = document.getElementById('resTotalFee');
+    const managedCost = document.getElementById('managedCost');
+    const setupCost = document.getElementById('setupCost');
+    const totalFee = document.getElementById('totalFee');
     const resPrevented = document.getElementById('resPrevented');
     const resSavings = document.getElementById('resSavings');
-    const resNetReturn = document.getElementById('resNetReturn');
+    const netReturn = document.getElementById('netReturn');
 
     const resetBtn = document.getElementById('resetBtn');
 
@@ -463,26 +614,21 @@
       valB.textContent = B_pct + '%';
       valC.textContent = '£' + C.toLocaleString('en-GB');
 
-      // Cost calculations
-      const platformFee = A * PLATFORM_FEE_PER_USER;
-      const totalFee = platformFee + SETUP_FEE;
-
-      // Savings calculations
       const expectedRelapses = A * B;
-      const preventedExact = expectedRelapses * RELAPSE_REDUCTION_FACTOR;
-      const costSaving = preventedExact * C;
-      
-      // Net return
-      const netReturn = costSaving - totalFee;
+      const prevented = expectedRelapses * config.reductionRate;
 
-      // Update DOM
-      resPlatform.textContent = formatCurrency(platformFee);
-      resSetup.textContent = formatCurrency(SETUP_FEE);
-      resTotalFee.textContent = formatCurrency(totalFee);
-      
-      resPrevented.textContent = formatNumber(preventedExact);
-      resSavings.textContent = formatCurrency(costSaving);
-      resNetReturn.textContent = formatCurrency(netReturn);
+      const managed = A * config.managedPlatformCostPerUser;
+      const setup = config.implementationCost;
+      const total = managed + setup;
+      const savings = prevented * C;
+      const net = savings - total;
+
+      managedCost.textContent = formatCurrency(managed);
+      setupCost.textContent = formatCurrency(setup);
+      totalFee.textContent = formatCurrency(total);
+      resPrevented.textContent = formatNumber(prevented);
+      resSavings.textContent = formatCurrency(savings);
+      netReturn.textContent = formatCurrency(net);
 
       paintRange(inputA);
       paintRange(inputB);
