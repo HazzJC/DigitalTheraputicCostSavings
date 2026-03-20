@@ -140,9 +140,10 @@
       background: linear-gradient(160deg, var(--panel), var(--teal-2));
       border-radius: 22px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
       height: 100%;
       display: flex;
+      isolation: isolate;
     }
 
     .panel::before{
@@ -154,15 +155,18 @@
       background: radial-gradient(circle, rgba(237,167,7,0.22), rgba(237,167,7,0.00) 62%);
       transform: rotate(18deg);
       pointer-events: none;
+      z-index: 0;
     }
 
     .panel-inner{
       position: relative;
-      z-index: 10;
+      z-index: 1;
       width: 100%;
       display: flex;
       flex-direction: column;
       min-height: 100%;
+      overflow: visible;
+      border-radius: 22px;
     }
 
     .kicker{
@@ -242,14 +246,6 @@
       line-height: 1.55;
     }
 
-    .metric-note{
-      font-size: 12px;
-      line-height: 1.55;
-      color: rgba(233,253,255,0.82);
-      margin-top: 10px;
-      max-width: 95%;
-    }
-
     .equal-height-grid{
       align-items: stretch;
     }
@@ -275,11 +271,110 @@
       justify-content: center;
     }
 
+    .metric-label-row{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+      max-width: 100%;
+    }
+
+    .info-wrap{
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: middle;
+      flex: 0 0 auto;
+    }
+
+    .info-icon{
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.30);
+      background: rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.98);
+      font-size: 10px;
+      font-weight: 800;
+      cursor: help;
+      user-select: none;
+      padding: 0;
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    .info-icon:focus-visible{
+      outline: 3px solid rgba(237, 167, 7, 0.45);
+      outline-offset: 2px;
+    }
+
+    .info-tooltip{
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 10px);
+      transform: translateX(-50%);
+      width: min(280px, calc(100vw - 32px));
+      max-width: 280px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.98);
+      color: rgba(255,255,255,0.94);
+      font-size: 12px;
+      line-height: 1.45;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.18s ease, visibility 0.18s ease;
+      z-index: 50;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .info-tooltip::before{
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      transform: translateX(-50%) rotate(45deg);
+      width: 12px;
+      height: 12px;
+      background: rgba(15, 23, 42, 0.98);
+    }
+
+    .info-wrap:hover .info-tooltip,
+    .info-wrap:focus-within .info-tooltip{
+      opacity: 1;
+      visibility: visible;
+    }
+
     @media (max-width: 1023px){
       .panel{ height: auto; }
       .left-column{ height: auto; }
       .left-stack{ flex: initial; }
       .input-card { flex: initial; }
+    }
+
+    @media (max-width: 640px){
+      .metric-label-row{
+        flex-wrap: wrap;
+      }
+
+      .info-tooltip{
+        left: auto;
+        right: 0;
+        transform: none;
+        width: min(260px, calc(100vw - 24px));
+      }
+
+      .info-tooltip::before{
+        left: auto;
+        right: 6px;
+        transform: rotate(45deg);
+      }
     }
   </style>
 </head>
@@ -410,27 +505,42 @@
                   <p class="metric-title">Savings</p>
 
                   <div class="mt-4">
-                    <p class="metric-label">Relapses prevented each year</p>
+                    <div class="metric-label-row">
+                      <p class="metric-label">Relapses prevented each year</p>
+                      <div class="info-wrap">
+                        <button type="button" class="info-icon" aria-label="More information about relapses prevented">i</button>
+                        <div class="info-tooltip" role="tooltip">
+                          Relapses prevented are calculated based on the Empower 2022 study published in The Lancet Psychiatry, which showed a 50% reduction in relapse events for those supported by CareLoop's remote monitoring platform in addition to standard care versus standard care alone.
+                        </div>
+                      </div>
+                    </div>
                     <p id="resPrevented" class="metric-value">125</p>
-                    <p class="metric-note">
-                      Relapses prevented are calculated based upon the results from the Empower 2022 study published in the Lancet Psychiatry which showed a 50% reduction of relapse events for those being supported by CareLoop's remote monitoring platform in addition to standard care vs standard care alone
-                    </p>
                   </div>
 
                   <div class="mt-5">
-                    <p class="metric-label">Total annual cost savings</p>
+                    <div class="metric-label-row">
+                      <p class="metric-label">Total annual cost savings</p>
+                      <div class="info-wrap">
+                        <button type="button" class="info-icon" aria-label="More information about total annual cost savings">i</button>
+                        <div class="info-tooltip" role="tooltip">
+                          Total cost savings are calculated by multiplying relapses prevented by the average cost of relapse, conservatively estimated at £25,000.
+                        </div>
+                      </div>
+                    </div>
                     <p id="resSavings" class="metric-value">£3,125,000</p>
-                    <p class="metric-note">
-                      Total cost savings are calculated by multiplying relapses prevented by the average cost of relapse, conservatively estimated to be £25,000
-                    </p>
                   </div>
 
                   <div class="mt-5">
-                    <p class="metric-label">Bed days avoided</p>
+                    <div class="metric-label-row">
+                      <p class="metric-label">Bed days avoided</p>
+                      <div class="info-wrap">
+                        <button type="button" class="info-icon" aria-label="More information about bed days avoided">i</button>
+                        <div class="info-tooltip" role="tooltip">
+                          Bed days avoided are calculated using the average length of stay for a psychosis relapse in an inpatient unit in England, set here at 82 days, multiplied by the total relapses prevented.
+                        </div>
+                      </div>
+                    </div>
                     <p id="bedDaysAvoided" class="metric-value">10,250</p>
-                    <p class="metric-note">
-                      Bed days avoided calculated based upon average length of stay for a psychosis relapse in an inpatient unit in England (82 days) by the total relapses prevented
-                    </p>
                   </div>
                 </div>
 
