@@ -242,6 +242,14 @@
       line-height: 1.55;
     }
 
+    .metric-note{
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(233,253,255,0.82);
+      margin-top: 10px;
+      max-width: 95%;
+    }
+
     .equal-height-grid{
       align-items: stretch;
     }
@@ -261,7 +269,7 @@
 
     .input-card{
       padding: 22px 22px;
-      flex: 1; /* Distribute space equally among remaining boxes */
+      flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -298,7 +306,7 @@
                   Assumption
                 </p>
                 <p class="text-xs mt-1" style="color: rgba(15,23,42,0.75);">
-                  25% reduction in expected relapses
+                  50% reduction in expected relapses
                 </p>
               </div>
             </div>
@@ -402,19 +410,33 @@
                   <p class="metric-title">Savings</p>
 
                   <div class="mt-4">
-                    <p class="metric-label">Relapses prevented</p>
-                    <p id="resPrevented" class="metric-value">63</p>
+                    <p class="metric-label">Relapses prevented each year</p>
+                    <p id="resPrevented" class="metric-value">125</p>
+                    <p class="metric-note">
+                      Relapses prevented are calculated based upon the results from the Empower 2022 study published in the Lancet Psychiatry which showed a 50% reduction of relapse events for those being supported by CareLoop's remote monitoring platform in addition to standard care vs standard care alone
+                    </p>
                   </div>
 
                   <div class="mt-5">
-                    <p class="metric-label">Cost saving</p>
-                    <p id="resSavings" class="metric-value">£1,562,500</p>
+                    <p class="metric-label">Total annual cost savings</p>
+                    <p id="resSavings" class="metric-value">£3,125,000</p>
+                    <p class="metric-note">
+                      Total cost savings are calculated by multiplying relapses prevented by the average cost of relapse, conservatively estimated to be £25,000
+                    </p>
+                  </div>
+
+                  <div class="mt-5">
+                    <p class="metric-label">Bed days avoided</p>
+                    <p id="bedDaysAvoided" class="metric-value">10,250</p>
+                    <p class="metric-note">
+                      Bed days avoided calculated based upon average length of stay for a psychosis relapse in an inpatient unit in England (82 days) by the total relapses prevented
+                    </p>
                   </div>
                 </div>
 
                 <div class="metric-section">
                   <p class="highlight-title">Net return</p>
-                  <p id="netReturn" class="metric-value soft">£1,037,500</p>
+                  <p id="netReturn" class="metric-value soft">£2,600,000</p>
                 </div>
               </div>
 
@@ -430,7 +452,7 @@
                     </svg>
                   </div>
                   <p class="input-inline-note">
-                    Net return is calculated as cost saving minus total platform fee, using a 25% reduction in expected relapses.
+                    Net return is calculated as total annual cost savings minus total platform fee, using a 50% reduction in expected relapses.
                   </p>
                 </div>
               </div>
@@ -449,9 +471,10 @@
     };
 
     const config = {
-      reductionRate: 0.25,
+      reductionRate: 0.50,
       managedPlatformCostPerUser: 500,
-      implementationCost: 25000
+      implementationCost: 25000,
+      averageBedDaysPerRelapse: 82
     };
 
     const inputA = document.getElementById('inputA');
@@ -467,6 +490,7 @@
     const totalFee = document.getElementById('totalFee');
     const resPrevented = document.getElementById('resPrevented');
     const resSavings = document.getElementById('resSavings');
+    const bedDaysAvoided = document.getElementById('bedDaysAvoided');
     const netReturn = document.getElementById('netReturn');
 
     const resetBtn = document.getElementById('resetBtn');
@@ -499,6 +523,7 @@
 
       const expectedRelapses = A * B;
       const prevented = expectedRelapses * config.reductionRate;
+      const bedDays = prevented * config.averageBedDaysPerRelapse;
 
       const managed = A * config.managedPlatformCostPerUser;
       const setup = config.implementationCost;
@@ -511,6 +536,7 @@
       totalFee.textContent = formatCurrency(total);
       resPrevented.textContent = formatNumber(prevented);
       resSavings.textContent = formatCurrency(savings);
+      bedDaysAvoided.textContent = formatNumber(bedDays);
       netReturn.textContent = formatCurrency(net);
 
       paintRange(inputA);
