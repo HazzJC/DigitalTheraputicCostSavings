@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CareLoop ROI Calculator</title>
+<meta name="description" content="CareLoop ROI Calculator — model relapses prevented, bed days avoided, platform cost and net saving across a CMHT psychosis population." />
+
+<!--
+  CareLoop ROI Calculator — single-file, self-contained web app.
+  No external requests: CSS, JS and the Lexend Deca webfont are all inlined.
+
+  EMBED (fixed-width site):
+    <iframe src="/careloop-roi-calculator/index.html"
+            title="CareLoop ROI Calculator"
+            style="width:100%;max-width:1040px;border:0;display:block;margin:0 auto"
+            height="1180" scrolling="no"></iframe>
+
+  AUTO-HEIGHT (optional) — the page posts its height to the parent on load,
+  resize and any input change. On the host page:
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'careloop-calc-height') {
+        document.querySelector('#careloop-calc').style.height = e.data.height + 'px';
+      }
+    });
+
+  TUNING — pricing and modelling constants live in the CONFIG block at the
+  bottom of this file (expected uptake, platform fee per user, implementation
+  fee, relapse reduction). Change them there only.
+-->
+
+<style>
+/* ---------- Brand webfont: Lexend Deca (subset, inlined) ---------- */
+@font-face{
+  font-family:'Lexend Deca';
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+  src:url(data:font/woff2;base64,d09GMgABAAAAABzMABAAAAAAPWQAABxtAAEBywAAAAAAAAAAAAAAAAAAAAAAAAAAGm4bpkgcegZgP1NUQVQuAIFmEQgKwnSzUQE2AiQDg0QLgWQABCAFg2IHIAwHG8MzRQdixjgADNwugOz/OkGLwy92hXkS10wO0k4MylwhJ9Jzpk95mCMMyEvt2XAdcx0Lz3alzyIs3z82WzpZCA7FAAgrHfYUtMP3fkVHSDL7A7/N3v+ACmIjBvWJEskQyU+ohA1GoWDFim03V3HlLpftVeniItuLSIfyrJk7J8WrXVGPT3TNAXiev/uv1wiWSetFhYDnPy55z71v95dKP5wuEC7gvXnAMwFKRILBNh7wgIfa8g+12N4Ax3BLgLDVtRiYMehctqRsySb/oc4U2N9WF/2zkjJNnYCm7umfJDsMWwnkVZ4LzBNv2nTYV08ZJo+5TGnrpcQqkAqkAvl70YMLT3qgAvivausrm1a6bT9Ix7KfSI8QhMApcRKOpqWd7Z1bgaWDNa4caaUDyXqQDrVeySXLDwAZUmYd6o71yClQBhhE9yFQ/lnwYejLLoiDj96WmXZBUY67xMO4CpUJxvr21/v9MnfEaA/dx5681PIsSyfsFAmOQMnR4/rvRwAIACoAHgAUAYIPIaSD0DND5SIphVGw8UBNrxQAQYRkA1QGCiQtkN6mQdy42274FbjeDgCFgAZ6/WZtI+S+fTQzBrmIAOActMCbZ1NjkAWanRGhfhRlvSD34JpxpjCqWHIu/jQnlXR2tOav5JV8m/9Lq6aO4m1soh90qfEpeAeJJa3sjs71jl7qS5b3dFz9vf9OBoFKoA9zXOOf3lk32+a62Te/LvbFv2xaXlv+XgVrEJu7xrVznV2vWQ9AOCFQBESZyCiyUeXJV6AQDV2JUmUYmDgwXDxCYhJSFWQqqahpaOnoWVjZVLGr5uSG86lVJyQiqkmzVjFxHTp16dVnwJBhmUIAXxSt1UcNAo3+zqBrVahI0tIhaDEH4cWQISAnZoomc4kIxTIJ8qCAiGSiFoJYvTYLQf2JBoLGg2YhAVe4lXgHYIDGuSTkYnJGxVYsI8Iz5GPmtprhGc3NmwqOoo6TLsAEHWgm0HjQvicy1XbVzQQ3FDf19K71XQwC0JrxW4hGPoACBUhRN4Py7fYYdyjgrdmkl86sNSV9LZYZMsl0MkdsUuvCrVdGmYEe+dIJFm5AzU9Ut5YDDev0zjYZHYkWSVoWejHbvDwYNlH23owZ1hfJYCMnOOQTMusYyB6Qo4KrB2+4nqIMcxwyTrSe6EIlEZX5Xarkog7HrEwUMvsoLR6UPqNZE2JzVTLQIUyEUGYiTJRHVCDEaMQCsIEDXJCCLF/eUh1oyGLBSjay7YEDuZFjhQgzZRLkQcFRaQE9KTlqWYMBvMGC96N+sJECn5nvFQ3bchxysUc1kotwoUwmClOeUgH5GRkL2MAp5vYJsEkbVRDIbBokHAQGBgSuZja715TyNigZJ0GCtDWx1Wk/duHq6ES0jjtGCVCwwyIDMRxiCbCBE2QdSFLSCBJSMVKvptnJQntiDGDVRCoitYA2t2WMwOLyBIGdCLMP2KSzqJhp1kHvO4jg/ktdIccF4C1AKwUY5z8DZaDtJtRMq1at31PZxTTZ2Y3evFl/vHmrDKoBbYhHYjcZ7SnAHq64uy441cPFCv4DI5+rD8LKhWLy8ia6GdTxIOauXbyI2QsB9wEIJagLZlwk+nflIBjsoCSuxMK362C8CboNBVaoKje73rvAkPGRJbahkWdGViIeb3CWMh4GKhdVN4FuXIgQwcjBZX5ESKhB9vI5GFLb9U3geGynVBNxBeiOVCHElG5SjyW8uAxA/HWg4UXUwGgbzZzYSMJSWagEpajHvi5bhiUF4kgXOoupxJMYasSFWKJEtYm6PCm6sgXgm4LWRW1aDLxaN+BHRFElXUn6sUyuyFBMI4aGkEeMQPTyQMiDH1pjfTS516YxhbtFbSqq/aGtQIET7DgTVUE5x9NMSVQGzAwKk+n1ttGwjoy1BoapO0GOrlYDQ9khvtwzHMQj2QiUhU5H23gg05eUXBscag36mv25KJ4KqlbnTRuXqze4yJrQDFQj9yWiEQEgRI6aOKZm679rSMh/05MUvmribEckUk0kkiDVlAqccCg7zdO6fdCzVGBKZFsV7bQzbB/oHESIq6azS61tD5kbirxRW2yhxMLDWHVpeOktLzoPlc/Q0c0djtmc2TTQdF2g/rskjLoT7osW/eB0w6qEDRu0EHNGAFj811aNvkU567B6uougSosReWMN/bsULJk8GeWjAVdd4Kmuwpw1UaWdnVebSGoErnq7Qqiu155ff5G/ClNnV2h2XZ6cq56W2lU63a8CoiIqkaKyjwu3yjG5rWeGxmeoqoK9ACSuqCD/a5UmAEBlQaAAiDKhKKgy5DEjw/notIozaNfOrFMXCwSiC4EQAIJIhA4AgAJTAAAAwYUolK0EiRiDRK5SAKgyLBn4ypFloeLIQ0aGQkkVyUGTSYapUr5ifFR5suSR54uHR7J3XQCCB6MifF5jOsFrSM0FKIDqwQci85ozlCvEkK0IIgsymFT5zQagyQJk2ggWRDdMkYuEgw6ToxgVygztBjFJWdJkAEqVPVT+O7Szv32V7AGiREAaVD0SKhomHkmXT4DhM4JfRA8lU53CZw6QD4GsndjaXIcE0PdtBVDTPDpynyZW8qKzgID/txbrhCuAnRcRvtwyAPFztoW1dECP0UUAGAKkm4IAfLo4E/ruRWrmczoQIC8k5DqA5nMJvU5zQ+UjekXHwvwEACiZOcR1S7vKEcfd702MhpVhLEy0vAwARsXCqU2Ptdb9irBSjGlTwLJPQKi3PjzaTcP1n46PcJECPn4SABsAHECI/GZ51OgW1m9Mnx7NWoQk+dTDRfgFDBs0pFavuKg2o5pMaJUQMwKBbMv0ABCTAAA+AYCDgPwF5NwAcBeACQDAkIIEFX9Qe9UgNDSKzkAe1N6BN9B9KUQ2qdqEnQjcBgAlg3dbBqL7HSKGQ/8RQm2qjU7q6zxXGMxnC1HOVBbxQSqJURm7o2TQS2m0HCAWBdnGLFXAz3BnUsvybxpGOZJi4vZ8ltWpB9gaVn5+yWKUbmlWedZ01mQVUKepuxRfSt2KvWtbAo2JyypqhkXNEWVRbq5IRBF0OrKis1wGcY9OkzDMOVlZWFaQz42IMAx9UbjC5dRW+2hjHi8glyKt1BDKVJaBkybpZ9EoJSEG0ughTDwRRNAjiFqizKx7hafARCV0tdWEO4lPUS/RFODkAFnJBr1l8LVwxx4zEaO8empWhYmSURCR9WeSDBNPh7K2GwQF6kJ6NGWpapKHdAGB8rLd3pF+zJh0TQIFvtyQCAZE+0jCk09uu7fXBwIl9El+PDZpunB8fVp2bBsUkZodH+1CIDhnkasppLB2HwPM6e/PO1ZCIeo/+yC7LC/P2wFbnjg2jTi0qNVKoHjs2O6ECMajIl+inNAe9nHHthvus2TBxh2KRCCyAfFmy7Xm7Z7DsSNEuv/PrJx+sCWrCbmAmz8Pd/2TZoFrcR304NAM5MAcp1L9YEmSdsCNrrPz83mVzlW+hEZ7UPnluTwfNVQX05lDB9hyqRWYJkuisEDpCx2I25NdHRVNESRfv1vrFhptWQZ0uFwDJemtSCor2PbH/Xlb1jNDt9p8sZhZwRbbwKq1JTz5NUCEwJTTm4yix+8Ggqy7DR35FweuU7zX3JO8tYFN/FTB7Tk24tlLV2kImYMLgVdLqCPZjLepcB1aNnxrzQaCKTFrKthMv10PX67iZeiCLSUhfvMvz8/3DZWQ2WuTTEM+GgLbtJhtGwAmeMJFOn3ItQcY67OZ2UTFe2DiRVM3cC6cSKM8XNDcxuqfJpskLPRKAkw2B+o0smnVLH+RKviBqPrq4wRETC1niC5rCSozji2YUP7QU3aP8I0edTNk48d9v5n8rTfoFZac9xrIhih0hA4f48ma2LrhT+ZLVRhNj1jDdl8uMzd3ncnCaovQfbX+xsI1zidpUnW4I5zkVne0ZgOX7QbzedeluufLoainlojOdiVuit7DxvOvcy4llbe1iUZLqtusxWm1orCZ0poVJlRvf6AralzhpLZ68E/gpa8vvkkj0C4pbU9Lua0Rew9ceDyFZLgXIywEmCsgYOxLb5Avix4IiI/5Cg2Pz59jfL5GrA8yRdjX8fAhmgxmPFxk5tFRZZfaroFydxSznq6VafolacPNlFELMqYLtdw5bn+VaSDvDSSSZ70E/YF2nmLiNQVBnHWyWiy6gDHFLjS73mikLllP7vREWDpYJ6zehO69eTbem+zJbQgHC1HOP7d3Vpm/Hnezjnge4lVDIepyh+kLh36gK3vfcz+MKhp/5oqFCoC7a0tDXa1oitQIeL2FP47nfWxY9Bs58nccMBHR9JwFjnFd5Mp5mX/Ra5biV8Osr1HxcBF6pVazzEsxKakTMYSGpEelSUBj54kJrYi5GUXiSPURs4Brq1Bq0ClSq1BYqj4Hp+tn4YylkjzweQCyHkGczGdtF66PZXGcWGQx+9n/Hg5aW9QtIHzNQrMqS38KMUD7q5tUYQAdG+7SxFeRv0nOLEQmCzlPN3nJzYLrQLkLgPiUGleHL5FEZG8ZUaApzN+++GUmil7gNqNxzcGzGHDbhm07cGf0sJh0rrljXKWcGF2EKCNcuV66LMRHDkr/YkHe3CReSoXZolYy3XHNfv3EuAa5EFvRAR0yZPK7S246s5lS54X9erOC2AkEuOSm0kV4kLh4zvYWZP3uPLwOf+pXzav/YrnmZNUKWJIeaXwJTNRL33lRK13ufYzhB+W2PsY1KxoO1lw9XN0wc2Eh/1st0M4mtJwXBsYY4OS861mQ68O9Un3lZCEpdRoxto671o8nPfo9i/F6g5dc48CancV2zXTzRZ2bXp9pkoatk2aDNnWN1pv+5MRoOdlA/BYQyemKPX7+BvPxOpru5uP/mBBdhFgUtlLoEHqFk4O++90A7Yw9JQxw7PYr22b6A2H1cp34WfPzx+J69W3DmNGtI+6OEKSFkUNHyfPipF2ehN5FgbtNrAiZzfbwVbSvvBpRjVrDrn20qdz4cHJRuv17Lif7Pun9qbvYX5xlyC+bTsF6cmCNNtat2hyu0c129KzV+7Xd7JBhky/43KlHOepGgd3JjxvMvPZqZyvPwP1pckDfMhSSdZdC72JhzWp1U4d8Qygkn21sX6OuOdlecUJfz72G1WY2s+KHo1z96dZMvQdTdd/WpbZrUtGUKRhZtEpTg6nU6zN2Uwr2kWs3G/p6DJtqawwbe7s362v1CVZUP+f1v/eZs4hriAs9bmHcoBO34952sU7spcfe4NC+e2PYUE5DyV7lRGN0ohJkiyOLelm6TZJ6JgX+xOSvk4lQ/x7C8s572XnoGzdex//l90JB5G3hmtlEa2JkswqLPFvPhYVXSavHxq6JLGwdmMjuD3tc58LraPQvM3vo/0MYcjDx3gwnnnUtBX9tqcf1fscZiitrTw/n07vWc972pylOdKFBJFr5+chi3wnxfG1GY5CWSebDNnJwnb69W7MpFBKmrOlBXenx1tUpPaMFUtpGYZWH1240MmPGpOUCu5vbbjJyO4jBht5FlrnO7LHZ5M90u8V8J3XmdsalYxzO0YuM2yExmhVvtZBatEIfY0aFLWGxJqrN1p4+S9WlTN2d1rHSx5vuG3+K9d4ch0+cF14AM9nczQrZvg00qrwxvV30pplReHlnv6o4HuY3lXlkFQKfQ9fC1BpiDK8hWRNUMe/jiW+msIp/pswkh5sEd34ncFf1TOrgi8bHUn+nnmmESVJ0A+5fF75j5LRWGQkplZoIsiLa08k7wg5zx0xQlSysPXXmEvetu6PXJX+p+3zfmavKFuCPDxamt93btW9tv+zKEvmQZb21Z4315u8vDd4UDGk1V6/ZctfMBws1D9y7+c47gfqWuXjjzlf15VvXU9a5Qi/If/Y4ax6t2ADsju7yaze9qd/0iGZd7r5cdz/YwtcUf7Ql9U9oD/3HMykoIDuHfNVrQ2FHeszrlbpLKjKrkztSOan1K+Ou7Z4SSqfSJ5dEdFpJWHdSKnB5VKuzDO8TtJF5ruJEbfPB2eTHyfCfeLnrNcw36q1Oh8P2taN4U4fCp5AeBBFNKawxYsT6UUBEDkz5XGvr6sD0UxTAp0wvmby/F68oVwUVsqhWK4/UKBUM7i8Bk/fflWbgkf0TuDMdDjvS47hP7C/dh5a/3JVcSq6nlf7v85QUtyp9Skm9Xg+GauU09oGNHF3nwVeF7OJ+PNgrsWhbRA43rz0je54eHf6oFGs4yDMEJMKQxSiPNMiMYldZj9a/ysOvpcFGv1zs9YoV2CoCL/Ts97nFz71T5NfllHef6DJ1geYz0xiPIQzbmxdZxgBf6NX1nwqlonxZzQzuTofDrvQMHmBf9XfXtLJlbfK7akG319XHs1jUNXJpWKeriATlalVQgQ6tFj5g8C8l3Yy5fWFBhS2sEHcFHEmzPF3uZBc6a8vt2pxyiOUkc3SzXDWH5caGTQJZj4lC4oobxNSkUFtZF5ERX8Vfau7kceL433/u/oC6lFz65/HP/S6QQpD+yQOek5qQrVEKTnLkbtbCgV+6T6U4kwxrrVLUE7Cm9PLUuwImqrYxLCmjdPX7XObPKlu5Dfw5yZHFFWrJdatxbzocFqZXq6sVhTUdyoBCGkEJlA7IlcogKCjjJYLv3a9Sq//sWBnhyQpmrzXhkD09mlfRJHhw7GDXfrXiK08a1molocLRKwUThvcDnng3Riv9v8VZwveN4450OFydHsNxMV62Ey1/eWfya1SVrT1hna7kPAoJlt8WHvhzUidvPlnn4QsLPttcPn7PE7kMoifC4sHvZNegvNJrfQVnywu/7Hkgr1x505HSQwGh8ZP3GNwnJJ5isdBf9HrA4uA992FRccn4/XnUUzefvrOE6WDzNT9x5Bq8SQw79yb3vnomEUrA8m6q11Z2OD1JiYLp6hOzfuZWM23JnOQY457ddTz49X3q+OEdknPXD31JhfBd1CRs2NGzS2PfrT06uyN1B9V3fV3v9iCcPPveJ+8xN516m/Q2s+iFHJv/+sce+8/km30iDYc/G/wV8qTw6uMbA2+5b5z5KrEjnX6T2voZaJpzB6l5sQ2NlISuOAYKcmSqperI+Lgw7YlEpieG7HBPILxj/Xo2ArAFDG+pTDU7/cyOh/p0N76rSoVS0IFFX/8RCRU46NieL7isyfefqteSPfXdMrO1TaVtNpccrqd/89KhC1WtKfibHBxxK8MNui25ehb/riqx+L52YQF+YCcr9OZ3oYrE9cal/3ZO49TKWmwXFpJ7HEOjVdCt2/pZqfXuvt/lsebjDYsAGd5xe9Dq+tQrlEqd/FGRJPSauIj2U6+pViJJJwwu7P09t/58geFIWCxJt9c5NukAhq5V4HAKYgZGrosdlrW+GL910Dz6wCuKNk5komRAcUm5gW3ptluS9hrbzLDb2yd+jOeSCfmO+4XS36rFFXzXGzDBXXW5N3Fnjoe+EjDUOWSobjNxMuTFuY237nn9m1K9palXW1UFhq+ovvSbu+fPYe+SqoUsc3XbkN7ZJzzP4XAL54XCg4VcNueAwIaJn2IwnpZgmORpBuMpMSyZX3wQrWfNYxGmuctq7rP6qifGnF5NC9/pEDaqym6h48L4Qv28t1n8SoVQzH5ULJiiSvnZMzBJ4RoE3Bin+1tBy10d/LuLKHM/ah7MK2Uyyvb0ctnG6t/A/DhG2UbabMVHcDtpO2XLIPbPIdErr6Q+nMG3nnv5czrruxhPEjQcDdornCv9zuo+rSVm4t5W4pKtz4+Nz6FRjA6HVmVOkQa8Ase4nnawupJep+2vybpq1dsDTRiyxw1h5WgKxlctxCn/7IUGd8O/F6aNW/NYg6sBCjaXPeroK7vbAReHSj8V1wKCGHRfD2AD087f9t3SNyXxd6LR4ZA/BNwH19Rs+HTP7tklzR7tx4cem5oShptD8EEtvN7+bsDEk2Qv+/lwBXRaNI6PZLXyj/Ks0FnfFOulFXjm8zRSZDGlq2Gj2KuOGemUqvNuA+mT51NcdkV/vHgoh2ZdEL6YRsLnWn7cf1sYnBf3bwxJw64Pmc/Nccujw+q3OnpYBTkN26Nf5JQywfzOx+Mbt2mMFeOu560dfn2wBJkJI1Q6sjKCQOWD6v/U80dbdum6uzXb61fUPzS36RHPeGRDZVuDagr3iNLeznaDge9/l5PXU/Dq9xqnmyuRueTCqEHJ7aoOt6j1nJzP+Omys/0aLe9MWw7bKMSL27Q11UOrTU0DJ00zI/b9fV7RUKBmVIQr3dR3GgSu+Qa2L5st531d6XJzzdRynbtM/KewVSlzQHW8+6cLV3a/I8VLtbpIu7xKXofteqJOLR+UcuYaGPQtTes/2rXvxWv2z5F90zZPwhZunm5gV9f+V+UwVmwI8nXyIO+yKLatfZ0kaWsIWbrY4LpysuckmMnNm9wK97dQh/fldBoVTWYrutouq+f6Ur1WW7Ar8kQ3dlJ84jVWHO+Bx3RB2hcrXmXlyuqfPXjPZWe+25hIGLzu3spkwPiDbleJcOPfIg7Nf+BgkYfNzqI/NVDiKmh+1GzMxYL5ITGe7CpVs/66Df+fzpx4WOv4ppl1vqXpliao/Dr+W1x55dPBT2G2rqPtn472TqfF0dZxGdTB+Cvxlxdjr8RggqAMDjzvruyak3ohCvsIhVFo/i5C30d5C7cvvS77MqtQzgx67AEr9fOv3znxWvZTWQUWWgCtuEUOzPFXBhJ4PdP7sjSHsuH/CwvJVxe4frlHJWo0GkXNXpV8aqbZqBc3edUVweJv5pzxLxG+OVf8r1roPz91cG/qrY0GFOsTOwPW9L9n9H8I6uWqvjff4Yhesw6IV2EAMmHZSWsRo+FU+FM4mQjtHIRoESkZPhxi4wD54Hf5/gAo5OADEMcXGWZlDcjAwZ6v0z/+Ti8u/wNdlDkt9BwAcQfGyReQ+dUSUMEskAPCKfqpav81hLYfXUqgt/Rx6LWc7Xe4vyVor/PWXr+hKruj/vPqZi9J3s2F/oAGuHHeuXamd3I3bPLL8Ff9C2P5l+UABACSZz/qTdauPNvvLALhSwDwjmGoGwDg80j6x19lb4OLCUAGFAAAAv58lkX6tCn/pQGODtHMZP0kXVTWs3p7mqrfKg0IxOl/q/xVJx/wdxNN3+vtFr3TTVBGuZGRVnS/TxPx6A78Lmnts0pnSbydb+YGlO5l6xqiruRvCckIgxLcKzvJy1qzDfyhw0Ne/uRk4veP4NwK91gWkrRKlZWe7PXmQ3sWsx1981Xog6FXI69epCzRTCH5IhElx9vDsOX97KLIr1oqoG0BWkewayKunKRstrrpK8ZOKXiYD5ZAnmzQiL0yQN6OmG+5fRmM9TZj9xRO5QrpwKrsoi8amwQpdyUzRgI/LftV+kuzV8R05YqnXEz6iQQHpuUAoeeXOo+T9FMaX4Cbw/q92A2TZwm/BmtSwUmmJv9nfllurPGRAJjLr+YgACYlZBqRlV5JFOsim0KALGQAOAam/RB0x/ZD5XpgPwKLJ/YjEgX2IymPaN8MgjgOgwBQk5AkitfqNm7CGlMGJaXMwGioqJlhGjvop9qJVldzTMJQJGmOG7KybzSdVqiZMu7RNEsJBdvThJnfQkkpadDKMvP3UugzbtTAlMarPaLfwJXG4q5pSl31VEvqV3o8mj3qlZJXGmmMN42agoqKkVVIWIiX1Ul0NeRQDnEtrKdmw+OSgwFWYb4qp4cWldkI4R/qrktDDnwgy1sN8WoAAA==) format('woff2');
+}
+@font-face{
+  font-family:'Lexend Deca';
+  font-style:normal;
+  font-weight:600;
+  font-display:swap;
+  src:url(data:font/woff2;base64,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) format('woff2');
+}
+
+/* ---------- CareLoop brand tokens ----------
+   Primary palette (Brand Guidelines p.9): Teal #08848F + tints, Slate #434342, White.
+   Secondary palette (p.10): plum #3D1F45, amber #F9B455 — used sparingly.        */
+:root{
+  --cl-teal:#08848F;          /* CareLoop Teal — graphics, slider fill, borders */
+  --cl-teal-text:#0A6B73;     /* shade of Teal for text on light backgrounds    */
+  --cl-teal-panel:#07737C;    /* shade of Teal for the results panel (AA text)  */
+  --cl-teal-20:#CFE6E8;       /* 20% tint  */
+  --cl-teal-wash:#EDF7F8;     /* page wash */
+  --cl-slate:#434342;         /* CareLoop Slate — headings and body copy */
+  --cl-slate-soft:#5F5F5E;
+  --cl-slate-20:#D8D9DA;
+  --cl-plum:#3D1F45;          /* secondary — H1 only, matches careloop.health */
+  --cl-amber:#F9B455;         /* secondary — highlight rules only */
+  --cl-white:#FFFFFF;
+
+  --cl-max:1040px;            /* shell width — set to your content column width */
+  --cl-radius:16px;
+  --cl-border:1px solid rgba(67,67,66,.14);
+  --cl-shadow:0 10px 24px -18px rgba(67,67,66,.45);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  padding:12px;
+  background:transparent;
+  color:var(--cl-slate);
+  font-family:'Lexend Deca',Helvetica,Arial,system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  font-weight:400;
+}
+@media (min-width:640px){ body{padding:16px} }
+
+.cl-shell{max-width:var(--cl-max);margin:0 auto}
+
+.cl-frame{
+  background:var(--cl-teal-wash);
+  border:1px solid var(--cl-teal-20);
+  border-radius:22px;
+  padding:20px;
+}
+@media (min-width:640px){ .cl-frame{padding:26px} }
+
+/* ---------- Header ---------- */
+.cl-head{
+  background:var(--cl-white);
+  border:var(--cl-border);
+  border-radius:var(--cl-radius);
+  box-shadow:var(--cl-shadow);
+  padding:20px;
+  margin-bottom:16px;
+}
+@media (min-width:640px){ .cl-head{padding:24px} }
+
+.cl-h1{
+  margin:0 0 14px;
+  font-size:clamp(22px,2.6vw,30px);
+  font-weight:600;
+  line-height:1.2;
+  letter-spacing:-.01em;
+  color:var(--cl-plum);
+}
+
+.cl-head-grid{display:grid;gap:16px}
+@media (min-width:860px){ .cl-head-grid{grid-template-columns:minmax(0,1fr) 280px;gap:24px} }
+
+.cl-blurb p{margin:0 0 10px;font-size:14px;line-height:1.6;color:var(--cl-slate-soft)}
+.cl-blurb p:last-child{margin-bottom:0}
+.cl-blurb .cl-pricing-note{font-weight:600;color:var(--cl-slate)}
+
+.cl-note{
+  background:var(--cl-teal-wash);
+  border:1px solid var(--cl-teal-20);
+  border-left:3px solid var(--cl-teal);
+  border-radius:12px;
+  padding:14px 16px;
+  align-self:start;
+}
+.cl-note h2{
+  margin:0 0 6px;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:.02em;
+  color:var(--cl-teal-text);
+}
+.cl-note p{margin:0;font-size:13px;line-height:1.55;color:var(--cl-slate-soft)}
+
+/* ---------- Layout ---------- */
+.cl-cols{display:grid;gap:16px}
+@media (min-width:860px){
+  .cl-cols{grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:stretch}
+  /* cards keep their natural height; leftover space is shared between them so the
+     two columns still finish level without stretching any one card */
+  .cl-inputs{grid-auto-rows:min-content;align-content:space-between}
+}
+
+/* ---------- Input cards ---------- */
+.cl-inputs{display:grid;gap:14px;min-width:0}
+
+.cl-card{
+  background:var(--cl-white);
+  border:var(--cl-border);
+  border-radius:var(--cl-radius);
+  box-shadow:var(--cl-shadow);
+  padding:22px 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.cl-card-top{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+  position:relative;
+}
+
+.cl-label{font-size:17px;font-weight:600;line-height:1.3;color:var(--cl-slate);margin:0}
+
+/* label plus its (i) button, kept on one baseline */
+.cl-label-wrap{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+
+/* fixed figures: stated as a number, not as a control read-out */
+.cl-value{
+  font-variant-numeric:tabular-nums;
+  font-weight:600;
+  font-size:clamp(26px,2.9vw,32px);
+  line-height:1;
+  letter-spacing:-.01em;
+  color:var(--cl-teal-text);
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.cl-pill{
+  font-variant-numeric:tabular-nums;
+  font-weight:600;
+  font-size:17px;
+  line-height:1;
+  color:var(--cl-teal-text);
+  background:var(--cl-white);
+  border:1.5px solid var(--cl-teal-20);
+  border-radius:10px;
+  padding:9px 12px;
+  min-width:78px;
+  text-align:center;
+  display:inline-block;
+}
+
+.cl-minmax{
+  display:flex;justify-content:space-between;gap:12px;
+  margin-top:8px;font-size:13px;color:var(--cl-slate-soft);
+  font-variant-numeric:tabular-nums;
+}
+
+.cl-help{margin:10px 0 0;font-size:12.5px;line-height:1.55;color:var(--cl-slate-soft)}
+.cl-help a{color:var(--cl-teal-text);text-decoration:underline;text-underline-offset:2px}
+.cl-help a:hover{text-decoration-thickness:2px}
+
+/* range input */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:10px;margin:0;
+  border-radius:999px;
+  background:var(--cl-slate-20);
+  outline:none;
+  cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:22px;height:22px;border-radius:999px;
+  background:var(--cl-teal);
+  border:3px solid var(--cl-white);
+  box-shadow:0 2px 6px rgba(67,67,66,.35);
+  cursor:grab;
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:999px;
+  background:var(--cl-teal);
+  border:3px solid var(--cl-white);
+  box-shadow:0 2px 6px rgba(67,67,66,.35);
+  cursor:grab;
+}
+input[type=range]:focus-visible{outline:3px solid var(--cl-teal);outline-offset:3px}
+
+/* ---------- Results panel ---------- */
+.cl-panel{
+  background:var(--cl-teal-panel);
+  border-radius:var(--cl-radius);
+  box-shadow:var(--cl-shadow);
+  color:var(--cl-white);
+  padding:22px;
+  isolation:isolate;
+  min-width:0;
+}
+@media (min-width:640px){ .cl-panel{padding:26px} }
+
+.cl-kicker{
+  margin:0;
+  font-size:11.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,.82);
+}
+
+.cl-block{
+  margin-top:20px;padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.22);
+}
+.cl-block:first-of-type{margin-top:18px;padding-top:0;border-top:0}
+
+.cl-block-title{
+  margin:0 0 14px;
+  font-size:12px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.78);
+}
+.cl-block-title.cl-accent{
+  color:var(--cl-amber);
+  letter-spacing:.1em;
+}
+
+.cl-metric{margin:0 0 16px}
+.cl-metric:last-child{margin-bottom:0}
+
+.cl-metric-label{
+  display:flex;align-items:center;gap:7px;flex-wrap:nowrap;
+  font-size:14.5px;font-weight:400;line-height:1.35;
+  color:rgba(255,255,255,.92);
+  position:relative;
+}
+.cl-metric-label span{min-width:0}
+
+.cl-metric-value{
+  margin:4px 0 0;
+  font-size:clamp(30px,4vw,42px);
+  font-weight:600;line-height:1.05;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+  color:var(--cl-white);
+}
+.cl-metric-value.cl-md{font-size:clamp(23px,2.8vw,28px)}
+.cl-metric-value.cl-sm{font-size:20px;color:rgba(255,255,255,.9)}
+
+.cl-sub{margin:4px 0 0;font-size:12px;line-height:1.5;color:rgba(255,255,255,.72)}
+
+/* 3 year cost — quieter sub-block under the year 1 total */
+.cl-threeyear{
+  margin-top:16px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+}
+.cl-threeyear p{margin:0}
+.cl-threeyear-label{
+  font-size:12px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.86);
+}
+.cl-threeyear .cl-metric-value{margin:5px 0 6px}
+
+.cl-foot{
+  margin-top:18px;padding-top:16px;
+  border-top:1px solid rgba(255,255,255,.22);
+  font-size:12px;line-height:1.55;color:rgba(255,255,255,.82);
+}
+.cl-foot p{margin:0 0 8px}
+.cl-foot p:last-child{margin-bottom:0}
+.cl-foot strong{font-weight:600;color:var(--cl-white)}
+
+/* ---------- Info tooltips ----------
+   Every tooltip is anchored to its own row (.cl-card-top in an input card,
+   .cl-metric-label in the results panel) rather than to the little (i) button,
+   so the bubble spans that row and can never clip at a viewport edge or widen
+   the page while it is hidden.                                              */
+.cl-info{position:static;display:inline-flex;flex:0 0 auto}
+.cl-info-btn{
+  width:19px;height:19px;padding:0;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:inherit;font-size:11px;font-weight:600;line-height:1;
+  color:var(--cl-white);
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.45);
+  border-radius:999px;
+  cursor:pointer;
+}
+.cl-info-btn:hover{background:rgba(255,255,255,.3)}
+.cl-info-btn:focus-visible{outline:2px solid var(--cl-amber);outline-offset:2px}
+
+/* (i) on a white card rather than on the teal panel */
+.cl-info-btn.cl-info-light{
+  color:var(--cl-teal-text);
+  background:var(--cl-white);
+  border:1.5px solid var(--cl-teal-20);
+}
+.cl-info-btn.cl-info-light:hover{background:var(--cl-teal-wash);border-color:var(--cl-teal)}
+.cl-info-btn.cl-info-light:focus-visible{outline:2px solid var(--cl-teal);outline-offset:2px}
+
+.cl-tip{
+  position:absolute;
+  left:0;right:0;bottom:calc(100% + 8px);
+  padding:12px 14px;
+  border-radius:12px;
+  background:var(--cl-slate);
+  color:rgba(255,255,255,.94);
+  font-size:12px;line-height:1.55;
+  text-align:left;
+  box-shadow:0 12px 28px rgba(67,67,66,.4);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .16s ease,visibility .16s ease;
+  z-index:40;
+}
+.cl-tip cite{display:block;margin-top:7px;font-style:normal;color:rgba(255,255,255,.75)}
+.cl-tip a{color:#9DCFD3;text-decoration:underline;text-underline-offset:2px}
+.cl-info:hover .cl-tip,
+.cl-info:focus-within .cl-tip,
+.cl-info.cl-open .cl-tip{opacity:1;visibility:visible;pointer-events:auto}
+
+/* ---------- Sources ---------- */
+.cl-sources{
+  background:var(--cl-white);
+  border:var(--cl-border);
+  border-radius:var(--cl-radius);
+  box-shadow:var(--cl-shadow);
+  padding:20px;
+}
+.cl-sources h2{
+  margin:0 0 8px;
+  font-size:11.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;
+  color:var(--cl-teal-text);
+}
+.cl-sources ol{margin:0;padding-left:18px}
+.cl-sources li{font-size:12px;line-height:1.6;color:var(--cl-slate-soft);margin-bottom:5px}
+.cl-sources li:last-child{margin-bottom:0}
+.cl-sources a{color:var(--cl-teal-text);text-decoration:underline;text-underline-offset:2px}
+
+@media print{
+  body{padding:0}
+  .cl-frame{background:none;border:0;padding:0}
+  .cl-panel{background:var(--cl-teal-panel) !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+
+<body>
+<main class="cl-shell">
+<div class="cl-frame">
+
+  <!-- ============ Header ============ -->
+  <header class="cl-head">
+    <h1 class="cl-h1">CareLoop ROI Calculator</h1>
+
+    <div class="cl-head-grid">
+      <div class="cl-blurb">
+        <p>The ROI calculator centres around inpatient admission avoidance and resulting reduced bed days from implementing CareLoop across a CMHT population. The reductions are calculated based upon an RCT published in the Lancet Psychiatry which showed CareLoop when used alongside standard care in a CMHT setting reduced incidence of relapse by 50%.</p>
+        <p>CareLoop can also positively impact other key metrics including length of stay, readmission rates and ED attendance, as well as workforce and patient satisfaction. As part of building a business case we work with you, utilising trust specific data to model annual savings and ROI based upon your specific deployment and use case.</p>
+        <p class="cl-pricing-note">Full pricing and commercial documentation can be found within the adjacent pricing tab.</p>
+      </div>
+
+      <aside class="cl-note">
+        <h2>Assumptions</h2>
+        <p>Set the eligible cohort to model estimated annual impact. The remaining figures are held at evidence-based values &mdash; hover or tap the (i) icon for the source. Where a trust has its own data we model on that instead.</p>
+      </aside>
+    </div>
+  </header>
+
+  <!-- ============ Inputs + results ============ -->
+  <div class="cl-cols">
+
+    <section class="cl-inputs" aria-label="Model inputs">
+
+      <!-- Eligible service users — the only figure the user sets -->
+      <div class="cl-card">
+        <div class="cl-card-top">
+          <label class="cl-label" for="clUsers">Eligible service users offered CareLoop</label>
+          <output class="cl-pill" id="clUsersOut" for="clUsers">800</output>
+        </div>
+        <input type="range" id="clUsers" min="100" max="2500" step="10" value="800" />
+        <div class="cl-minmax"><span>100</span><span>2,500</span></div>
+      </div>
+
+      <!-- Average annual relapse rate — fixed -->
+      <div class="cl-card">
+        <div class="cl-card-top">
+          <h3 class="cl-label">Average annual relapse rate</h3>
+          <span class="cl-value" id="clRateOut">25%</span>
+        </div>
+        <p class="cl-help">An individual who has a psychosis or schizophrenia diagnosis has a <span data-cl="ratePct">25%</span> annual risk of relapse.</p>
+      </div>
+
+      <!-- Average cost of a relapse — fixed -->
+      <div class="cl-card">
+        <div class="cl-card-top">
+          <span class="cl-label-wrap">
+            <h3 class="cl-label">Average cost of a relapse</h3>
+            <span class="cl-info">
+              <button type="button" class="cl-info-btn cl-info-light" aria-label="Source for the average cost of a relapse">i</button>
+              <span class="cl-tip" role="tooltip">
+                &pound;25,852 is the mean in-patient cost per relapse admission in a UK study of hospital treatment and management in relapse of schizophrenia, of which over 97% was hospital cost and under 3% drug cost.
+                <cite><a href="https://doi.org/10.1192/pb.bp.109.027714" target="_blank" rel="noopener">Munro et al., The Psychiatrist, 2011</a></cite>
+              </span>
+            </span>
+          </span>
+          <span class="cl-value" id="clCostOut">&pound;25,852</span>
+        </div>
+        <p class="cl-help">This is a conservative figure factoring in costs of admission not associated broader costs. <a href="https://doi.org/10.1192/pb.bp.109.027714" target="_blank" rel="noopener">Hospital treatment and management in relapse of schizophrenia in the UK: associated costs, Munro et al 2011</a></p>
+      </div>
+
+      <!-- Average length of inpatient stay — fixed -->
+      <div class="cl-card">
+        <div class="cl-card-top">
+          <h3 class="cl-label">Average length of inpatient stay</h3>
+          <span class="cl-value" id="clLosOut">78 days</span>
+        </div>
+        <p class="cl-help">The average inpatient bed days per relapse admission based on NHSE Hospital Admitted Patient Care Activity data from 24/25 for those with an eligible diagnosis (F20 &ndash; F29 excluding F21) is <span data-cl="losDays">78</span> days.</p>
+      </div>
+
+    <!-- ============ Sources ============ -->
+    <section class="cl-sources" aria-label="Sources">
+      <h2>Sources</h2>
+      <ol>
+        <li>Gumley AI, et al. The EMPOWER blended digital intervention for relapse prevention in schizophrenia: a feasibility cluster randomised controlled trial in Scotland and Australia. <em>The Lancet Psychiatry</em> 2022;9(6):477&ndash;486. <a href="https://doi.org/10.1016/S2215-0366(22)00103-1" target="_blank" rel="noopener">doi:10.1016/S2215-0366(22)00103-1</a></li>
+        <li>Munro J, et al. Hospital treatment and management in relapse of schizophrenia in the UK: associated costs. <em>The Psychiatrist</em> 2011;35(3):95&ndash;100. <a href="https://doi.org/10.1192/pb.bp.109.027714" target="_blank" rel="noopener">doi:10.1192/pb.bp.109.027714</a></li>
+      </ol>
+    </section>
+
+    </section>
+
+    <!-- ============ Results ============ -->
+    <aside class="cl-panel" aria-label="Estimated annual impact">
+      <p class="cl-kicker">Estimated annual impact</p>
+
+      <!-- Savings -->
+      <div class="cl-block">
+        <h2 class="cl-block-title cl-accent">Savings</h2>
+
+        <div class="cl-metric">
+          <div class="cl-metric-label">
+            <span>Relapses prevented each year</span>
+            <span class="cl-info">
+              <button type="button" class="cl-info-btn" aria-label="Source for relapses prevented each year">i</button>
+              <span class="cl-tip" role="tooltip">
+                Relapses prevented apply a 50% reduction to expected relapses, taken from the EMPOWER cluster randomised controlled trial in community mental health services: relapse relative risk 0.50 (95% CI 0.26&ndash;0.98) for CareLoop&rsquo;s remote monitoring platform alongside standard care versus standard care alone.
+                <cite><a href="https://doi.org/10.1016/S2215-0366(22)00103-1" target="_blank" rel="noopener">Gumley et al., The Lancet Psychiatry, 2022</a></cite>
+              </span>
+            </span>
+          </div>
+          <p class="cl-metric-value" id="clPrevented">100</p>
+        </div>
+
+        <div class="cl-metric">
+          <div class="cl-metric-label">
+            <span>Total annual cost saving</span>
+            <span class="cl-info">
+              <button type="button" class="cl-info-btn" aria-label="Source for total annual cost saving">i</button>
+              <span class="cl-tip" role="tooltip">
+                Relapses prevented multiplied by the average cost of a relapse, set at the mean in-patient cost per relapse admission of &pound;25,852. This covers admission costs only, rather than broader system costs such as community care, ED attendance or lost productivity.
+                <cite><a href="https://doi.org/10.1192/pb.bp.109.027714" target="_blank" rel="noopener">Munro et al., The Psychiatrist, 2011</a></cite>
+              </span>
+            </span>
+          </div>
+          <p class="cl-metric-value" id="clSavings">&pound;2,500,000</p>
+        </div>
+
+        <div class="cl-metric">
+          <div class="cl-metric-label">
+            <span>Bed days avoided</span>
+            <span class="cl-info">
+              <button type="button" class="cl-info-btn" aria-label="Explanation of bed days avoided">i</button>
+              <span class="cl-tip" role="tooltip">
+                Relapses prevented multiplied by the average length of an inpatient stay for a psychosis admission, set here at 78 days.
+              </span>
+            </span>
+          </div>
+          <p class="cl-metric-value" id="clBedDays">7,800</p>
+        </div>
+      </div>
+
+      <!-- Investment -->
+      <div class="cl-block">
+        <h2 class="cl-block-title cl-accent">Investment</h2>
+
+        <div class="cl-metric">
+          <div class="cl-metric-label"><span>Cost of managed platform, per annum</span></div>
+          <p class="cl-metric-value cl-md" id="clManaged">&pound;400,000</p>
+        </div>
+
+        <div class="cl-metric">
+          <div class="cl-metric-label"><span>Implementation and set-up, one-off</span></div>
+          <p class="cl-metric-value cl-md" id="clSetup">&pound;25,000</p>
+        </div>
+
+        <h3 class="cl-block-title cl-accent" style="margin:18px 0 0">Total platform fee year 1</h3>
+        <p class="cl-metric-value" id="clYear1">&pound;425,000</p>
+
+        <div class="cl-threeyear">
+          <p class="cl-threeyear-label">3 year cost</p>
+          <p class="cl-metric-value cl-sm" id="clThreeYearCost">&pound;1,225,000</p>
+          <p class="cl-sub">Three years of managed platform fee plus a single implementation and set-up fee.</p>
+        </div>
+      </div>
+
+      <!-- Net saving -->
+      <div class="cl-block">
+        <h2 class="cl-block-title cl-accent">Net saving, year 1</h2>
+        <p class="cl-metric-value" id="clNet">&pound;867,600</p>
+
+        <div class="cl-threeyear">
+          <p class="cl-threeyear-label">3 year saving</p>
+          <p class="cl-metric-value cl-sm" id="clThreeYearNet">&pound;2,652,800</p>
+          <p class="cl-sub">Three years of cost saving less the 3 year cost, with the implementation and set-up fee charged once.</p>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+</div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= CONFIG — edit pricing and modelling here =================
+     Every figure on screen, including the numbers written into the explanatory
+     captions, is rendered from this block. Change a value here and the whole
+     calculator follows.                                                        */
+  var CONFIG = {
+    annualRelapseRate:  0.25,      // fixed — annual risk of relapse per service user
+    relapseReduction:   0.50,      // EMPOWER RCT: relative risk 0.50 vs standard care
+    expectedUptake:     0.50,      // share of the eligible cohort expected to use CareLoop
+    costPerRelapse:     25852,     // £ mean in-patient cost per relapse admission
+    lengthOfStay:       78,        // days — average inpatient bed days per relapse admission
+    platformFeePerUser: 500,       // £ per eligible service user, per annum
+    implementationFee:  25000,     // £ one-off implementation and set-up
+    contractYears:      3          // drives the "3 year cost" and "3 year saving" lines
+  };
+  /* =========================================================================== */
+
+  var el = function (id) { return document.getElementById(id); };
+
+  var users = el('clUsers');
+  var out = {
+    users: el('clUsersOut'),
+    prevented: el('clPrevented'), savings: el('clSavings'), bedDays: el('clBedDays'),
+    managed: el('clManaged'), setup: el('clSetup'), year1: el('clYear1'),
+    threeYearCost: el('clThreeYearCost'), net: el('clNet'),
+    threeYearNet: el('clThreeYearNet')
+  };
+
+  function money(n) {
+    var v = Math.round(n);
+    return (v < 0 ? '−£' : '£') + Math.abs(v).toLocaleString('en-GB');
+  }
+  function num(n) {
+    return Math.round(n).toLocaleString('en-GB');
+  }
+  function pct(n) {
+    return Math.round(n * 100) + '%';
+  }
+
+  function paint(input) {
+    var lo = Number(input.min), hi = Number(input.max);
+    var share = ((Number(input.value) - lo) / (hi - lo)) * 100;
+    input.style.background =
+      'linear-gradient(to right, var(--cl-teal) ' + share + '%, var(--cl-slate-20) ' + share + '%)';
+  }
+
+  /* The fixed figures and the numbers quoted inside the captions. */
+  function paintFixed() {
+    el('clRateOut').textContent = pct(CONFIG.annualRelapseRate);
+    el('clCostOut').textContent = money(CONFIG.costPerRelapse);
+    el('clLosOut').textContent  = num(CONFIG.lengthOfStay) + ' days';
+
+    var text = {
+      ratePct: pct(CONFIG.annualRelapseRate),
+      losDays: num(CONFIG.lengthOfStay)
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cl]'), function (node) {
+      var key = node.getAttribute('data-cl');
+      if (text[key]) node.textContent = text[key];
+    });
+  }
+
+  function calculate() {
+    var eligible = Number(users.value) || 0;
+
+    out.users.textContent = num(eligible);
+
+    /* Eligible cohort steps down by expected uptake before any relapse is counted. */
+    var active = eligible * CONFIG.expectedUptake;
+    var expected = active * CONFIG.annualRelapseRate;
+
+    /* Whole relapses only, so the displayed count and the money reconcile. */
+    var prevented = Math.floor(expected * CONFIG.relapseReduction);
+    var savings = prevented * CONFIG.costPerRelapse;
+    var bedDays = prevented * CONFIG.lengthOfStay;
+
+    var managed = eligible * CONFIG.platformFeePerUser;
+    var year1 = managed + CONFIG.implementationFee;
+    var threeYearCost = (managed * CONFIG.contractYears) + CONFIG.implementationFee;
+    var threeYearNet = (savings * CONFIG.contractYears) - threeYearCost;
+
+    out.prevented.textContent = num(prevented);
+    out.savings.textContent = money(savings);
+    out.bedDays.textContent = num(bedDays);
+    out.managed.textContent = money(managed);
+    out.setup.textContent = money(CONFIG.implementationFee);
+    out.year1.textContent = money(year1);
+    out.threeYearCost.textContent = money(threeYearCost);
+    out.net.textContent = money(savings - year1);
+    out.threeYearNet.textContent = money(threeYearNet);
+
+    paint(users);
+    reportHeight();
+  }
+
+  users.addEventListener('input', calculate);
+
+  /* ---------- Tooltips: hover, keyboard focus, and tap ---------- */
+  var infos = Array.prototype.slice.call(document.querySelectorAll('.cl-info'));
+
+  infos.forEach(function (info) {
+    info.querySelector('.cl-info-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = info.classList.contains('cl-open');
+      infos.forEach(function (i) { i.classList.remove('cl-open'); });
+      if (!open) info.classList.add('cl-open');
+    });
+  });
+
+  document.addEventListener('click', function () {
+    infos.forEach(function (i) { i.classList.remove('cl-open'); });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') infos.forEach(function (i) { i.classList.remove('cl-open'); });
+  });
+
+  /* ---------- Report height to a host page (for iframe embeds) ---------- */
+  var lastHeight = 0;
+  function reportHeight() {
+    if (window.parent === window) return;
+    var h = Math.ceil(document.documentElement.scrollHeight);
+    if (h === lastHeight) return;
+    lastHeight = h;
+    window.parent.postMessage({ type: 'careloop-calc-height', height: h }, '*');
+  }
+
+  window.addEventListener('resize', reportHeight);
+  if (window.ResizeObserver) {
+    new ResizeObserver(reportHeight).observe(document.body);
+  }
+
+  paintFixed();
+  calculate();
+})();
+</script>
+</body>
+</html>
